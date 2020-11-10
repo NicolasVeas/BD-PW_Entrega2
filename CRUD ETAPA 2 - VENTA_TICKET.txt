@@ -1,0 +1,122 @@
+
+--CONSULTA FUNCIONES AGREGADAS 
+
+-- 1)ADMINISTRADOR consulta la cantidad de dinero gastado en tickets un usuario en especifico
+
+SELECT SUM(precio), t.id_usuario
+FROM ticket as t INNER JOIN ticket_venta as tv 
+ON t.id_ticket = tv.id_ticket 
+WHERE t.id_usuario = 1;
+
+--2)ADMINISTRADOR consulta las ganancias totales por cada categoria de evento que se han generado en este momento 
+
+SELECT SUM(precio) as "Ganancia total", e.categoria
+FROM ticket as t INNER JOIN evento e
+ON t.id_evento = e.id_evento
+WHERE t.disponible = 0
+group by categoria;
+
+
+-- CONSULTAS GROUP BY
+
+-- 1) 
+-- ADMINISTRADOR consulta la cantidad de tickets disponibles segun la fecha de realizacion de los eventos 
+
+SELECT fecha, count(*) as tickets
+FROM ticket as t INNER JOIN evento e 
+ON t.id_evento=e.id_evento 
+group by fecha;
+
+
+-- 2)
+-- ADMINISTRADOR consulta la cantidad de tickets disponibles segun el nombre de cada evento
+
+SELECT nombre, count(*) as tickets
+FROM ticket as t INNER JOIN evento e 
+ON t.id_evento=e.id_evento 
+group by nombre;
+
+
+-- 3) 
+-- ADMINISTRADOR consulta la cantidad de tickets disponibles segun la categoria de cada evento
+
+SELECT categoria, count(*) as tickets
+FROM ticket as t INNER JOIN evento e 
+ON t.id_evento=e.id_evento 
+group by categoria;
+
+
+-- CONSULTAS CON OPERADORES
+
+-- 1)
+-- ADMINISTRADOR consulta la cantidad de Tickets sin vender de cada eventos
+
+SELECT count(*) as "Numero de Tickets sin vender", e.nombre
+FROM ticket as t INNER JOIN evento e
+ON t.id_evento = e.id_evento
+WHERE t.id_usuario is  null
+group by nombre
+
+-- 2)
+-- ADMINISTRADOR consulta la cantidad de Tickets vendidos de cada eventos
+
+SELECT count(*) as "Numero de Tickets vendidos", e.nombre
+FROM ticket as t INNER JOIN evento e
+ON t.id_evento = e.id_evento
+WHERE t.id_usuario is not null
+group by nombre
+
+-- CONSULTAS DE PERMISO DE USUARIO A INFORMATION_SCHEMA
+
+-- 1)
+-- ADMINISTRADOR consulta la cantidad de tablas dentro de la base de tados 
+
+SELECT count(*) cantidad_tablas
+FROM information_schema.tables
+WHERE table_schema = 'proyecto_ticket'
+ORDER BY table_name DESC;
+
+-- 2)
+-- ADMINISTRADOR pide informacion sobre una columna en especifico de una trabla
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE table_name = 'evento'
+AND table_schema = 'proyecto_ticket'
+AND column_name LIKE 'id_evento'; 
+
+-- SUBCONSULTAS 
+
+-- 1)
+
+--ADMINISTRADOR consulta los usuarios que han comprado ticket
+
+SELECT DISTINCT u.id_usuario, u.nombre, u.apellido, u.sexo   
+FROM usuario u JOIN
+  (SELECT id_usuario, id_ticket   
+  FROM ticket )AS t
+ON u.id_usuario = t.id_usuario;
+
+
+-- 2)
+-- ADMINISTRADOR consulta los usuarios hombres que han comprado ticket
+
+SELECT DISTINCT u.id_usuario    
+FROM usuario u JOIN
+  (SELECT id_usuario, id_ticket   
+  FROM ticket )AS t
+ON u.id_usuario = t.id_usuario
+WHERE u.sexo = "M";
+
+-- 3)
+-- Administrador puede visualizar la ventas y ticket con su información general
+
+SELECT vt.*, p.id_usuario, p.id_ticket, p.precio, id_evento
+FROM venta as vt INNER JOIN
+(SELECT t.id_usuario, t.id_ticket, t.precio, t.id_evento, tv.id_venta
+FROM ticket as t INNER JOIN ticket_venta tv
+ON t.id_ticket = tv.id_ticket) p
+ON vt.id_venta = p.id_venta;
+
+
+
